@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import vertShader from './shaders/shader.vert';
+import fragShader from './shaders/shader.frag';
 
 const threejs = new THREE.WebGLRenderer();
 document.body.appendChild(threejs.domElement);
@@ -11,15 +13,12 @@ const camera = new THREE.PerspectiveCamera(45, 800 / 600, 0.1, 1000);
 camera.position.set(0, 0, 5);
 
 async function load() {
-    const vsh = await (await fetch("./shaders/shader.vert")).text();
-    const fsh = await (await fetch("./shaders/shader.frag")).text();
-
     const material = new THREE.ShaderMaterial({
         uniforms: {
             color: { value: new THREE.Vector4(0, 1, 0, 1) }
         },
-        vertexShader: vsh,
-        fragmentShader: fsh
+        vertexShader: vertShader.source,
+        fragmentShader: fragShader.source
     });
     
     const box = new THREE.BoxGeometry(1, 1, 1);
