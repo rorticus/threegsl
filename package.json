@@ -5,5 +5,8 @@
 		"ts-plugin-glsl",
 		"glsl-ts-util",
 		"vite-plugin-glsl"
-	]
+	],
+	"scripts": {
+		"dev": "yarn workspace threegsl dev"
+	}
 }

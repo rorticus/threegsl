@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import vsh from '../public/shaders/shader.vert';
+import vsh from './shaders/shader.vert';
+import fsh from './shaders/shader.frag';
 
 const threejs = new THREE.WebGLRenderer();
 document.body.appendChild(threejs.domElement);
@@ -12,9 +13,6 @@ const camera = new THREE.PerspectiveCamera(45, 800 / 600, 0.1, 1000);
 camera.position.set(0, 0, 5);
 
 async function load() {
-    // const vsh = await (await fetch("./shaders/shader.vert")).text();
-    const fsh = await (await fetch("./shaders/shader.frag")).text();
-    
     const light1 = {
         dir: new THREE.Vector3(1, 1, -1),
         color: new THREE.Vector3(1, 1, 1),
@@ -39,7 +37,7 @@ async function load() {
             u_numLights: { value: 2 },
         },
         vertexShader: vsh.source,
-        fragmentShader: fsh
+        fragmentShader: fsh.source,
     });
     
     const colors = new Float32Array(24 * 3);

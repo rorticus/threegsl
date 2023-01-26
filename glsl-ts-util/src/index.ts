@@ -1,5 +1,5 @@
-import glslParser from '@shaderfrog/glsl-parser';
-import glslAst from '@shaderfrog/glsl-parser/ast/index.js';
+import * as glslParser from '@shaderfrog/glsl-parser';
+import * as glslAst from '@shaderfrog/glsl-parser/ast/index.js';
 import type { DeclaratorListNode, Path } from '@shaderfrog/glsl-parser/ast';
 import { readFileSync } from 'fs';
 
@@ -30,10 +30,10 @@ defaultTypeMap.set('float', 'number');
 function parseNode(node: DeclaratorListNode) {
 	const spec_type = node.specified_type;
 	const qualifiers = spec_type.qualifiers
-		.map((q: { token: string }) => q.token)
-		.join(' ');
-	const type = spec_type.specifier.specifier.token;
-	const identifier = node.declarations[0].identifier.identifier;
+		?.map((q: { token: string }) => q.token)
+		.join(' ') ?? [];
+	const type = spec_type.specifier?.specifier.token;
+	const identifier = node.declarations[0]?.identifier.identifier;
 	return { qualifiers, type, identifier };
 }
 
