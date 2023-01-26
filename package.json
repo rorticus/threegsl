@@ -7,6 +7,10 @@
 		"vite-plugin-glsl"
 	],
 	"scripts": {
-		"dev": "yarn workspace threegsl dev"
+		"dev": "yarn workspace threegsl dev",
+		"build:glsl-util": "yarn workspace glsl-ts-util build",
+		"build:ts-plugin": "yarn workspace ts-plugin-glsl build",
+		"build:vite-plugin": "yarn workspace vite-plugin-glsl build",
+		"build": "yarn build:glsl-util && yarn build:ts-plugin && yarn build:vite-plugin"
 	}
 }
