@@ -1,6 +1,7 @@
 import * as THREE from 'three';
-import vsh from './shaders/shader.vert';
-import fsh from './shaders/shader.frag';
+import vsh from './shaders/shader.vert.js';
+import fsh from './shaders/shader.frag.js';
+import {createShaderMaterial} from "./shaders/shaders";
 
 const threejs = new THREE.WebGLRenderer();
 document.body.appendChild(threejs.domElement);
@@ -30,14 +31,16 @@ async function load() {
         color: new THREE.Vector3(0, 0, 0),
         intensity:  0
     }
-
-    const material = new THREE.ShaderMaterial({
+    
+    const material = createShaderMaterial({
         uniforms: {
             u_lights: { value: [light1, light2, light3] },
             u_numLights: { value: 2 },
+            u_time: { value: 5 },
+            u_floatArray: { value: [1] },
         },
-        vertexShader: vsh.source,
-        fragmentShader: fsh.source,
+        vertexShader: vsh,
+        fragmentShader: fsh,
     });
     
     const colors = new Float32Array(24 * 3);
