@@ -38,7 +38,7 @@ async function load() {
             u_lights: { value: [light1, light2, light3] },
             u_numLights: { value: 2 },
         },
-        vertexShader: vsh,
+        vertexShader: vsh.source,
         fragmentShader: fsh
     });
     
