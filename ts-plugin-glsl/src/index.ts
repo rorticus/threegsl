@@ -10,16 +10,13 @@ function init(modules: {
 	function create(info: ts.server.PluginCreateInfo) {
 		info.project.projectService.logger.info('>>> Initializing ts-plugin-glsl');
 
+		// Get the file snapshot. If it's a GLSL file, the snapshot will be for
+		// a virtual .d.ts file. Otherwise, just pass through the original
+		// snapshot.
 		const getSnapshot = (
 			filename: string,
 			scriptSnapshot: ts.IScriptSnapshot
 		) => {
-			if (!filename.includes('node_modules')) {
-				info.project.projectService.logger.info(
-					`>>> Updating sourceFile for ${filename}`
-				);
-			}
-
 			if (isGlsl(filename)) {
 				// replace the default GLSL snapshot with one that has a
 				// generated .d.ts file as its content
@@ -29,7 +26,9 @@ function init(modules: {
 			return scriptSnapshot;
 		};
 
-		const updateSourceFile = (filename: string, sourceFile: ts.SourceFile) => {
+		// Ensure the sourceFile object for a GLSL file is flagged as a
+		// declaration file.
+		const checkSourceFile = (filename: string, sourceFile: ts.SourceFile) => {
 			if (isGlsl(filename)) {
 				// GLSL files will always end up as declaration files
 				sourceFile.isDeclarationFile = true;
@@ -40,8 +39,17 @@ function init(modules: {
 		// Create source file entries
 		const tsCreateLanguageServiceSourceFile =
 			ts.createLanguageServiceSourceFile;
-		ts.createLanguageServiceSourceFile = (filename, scriptSnapshot, ...rest) =>
-			updateSourceFile(
+		ts.createLanguageServiceSourceFile = (
+			filename,
+			scriptSnapshot,
+			...rest
+		) => {
+			if (!filename.includes('node_modules')) {
+				info.project.projectService.logger.info(
+					`>>> Creating source file entry for ${filename}`
+				);
+			}
+			return checkSourceFile(
 				filename,
 				tsCreateLanguageServiceSourceFile(
 					filename,
@@ -49,6 +57,7 @@ function init(modules: {
 					...rest
 				)
 			);
+		};
 
 		// Update source file entries when file content changes
 		const tsUpdateLanguageServiceSourceFile =
@@ -57,12 +66,19 @@ function init(modules: {
 			sourceFile,
 			scriptSnapshot,
 			...rest
-		) =>
-			updateSourceFile(
+		) => {
+			if (!sourceFile.fileName.includes('node_modules')) {
+				info.project.projectService.logger.info(
+					`>>> Updating source file entry for ${sourceFile.fileName}`
+				);
+			}
+			return checkSourceFile(
 				sourceFile.fileName,
 				tsUpdateLanguageServiceSourceFile(sourceFile, scriptSnapshot, ...rest)
 			);
+		};
 
+		// Update the module resolution logic to handle GLSL files
 		if (info.languageServiceHost.resolveModuleNames) {
 			const tsResolveModuleNames =
 				info.languageServiceHost.resolveModuleNames.bind(
@@ -81,6 +97,7 @@ function init(modules: {
 
 				return moduleNames.map((moduleName, index) => {
 					if (isGlsl(moduleName)) {
+						// resolve GLSL files to virtual .d.ts files
 						return {
 							extension: tsModule.Extension.Dts,
 							isExternalLibraryImport: false,
@@ -95,15 +112,9 @@ function init(modules: {
 				});
 			};
 		}
-
-		info.project.projectService.logger.info('>>> Initialized ts-plugin-glsl');
 	}
 
-	function getExternalFiles(project: tsModule.server.ConfiguredProject) {
-		return project.getFileNames().filter(isGlsl);
-	}
-
-	return { create, getExternalFiles };
+	return { create };
 }
 
 export = init;
