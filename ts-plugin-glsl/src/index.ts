@@ -8,66 +8,60 @@ function init(modules: {
 	const ts = modules.typescript;
 
 	function create(info: ts.server.PluginCreateInfo) {
-		// Diagnostic logging
 		info.project.projectService.logger.info('>>> Initializing ts-plugin-glsl');
 
-		const tsCreateLanguageServiceSourceFile =
-			ts.createLanguageServiceSourceFile;
-		ts.createLanguageServiceSourceFile = (
-			filename,
-			scriptSnapshot,
-			...rest
+		const getSnapshot = (
+			filename: string,
+			scriptSnapshot: ts.IScriptSnapshot
 		) => {
 			if (!filename.includes('node_modules')) {
 				info.project.projectService.logger.info(
-					`>>> Creating sourceFile for ${filename}`
+					`>>> Updating sourceFile for ${filename}`
 				);
 			}
 
 			if (isGlsl(filename)) {
-				scriptSnapshot = getDtsSnapshot(ts, scriptSnapshot);
+				// replace the default GLSL snapshot with one that has a
+				// generated .d.ts file as its content
+				return getDtsSnapshot(ts, scriptSnapshot);
 			}
 
-			const sourcefile = tsCreateLanguageServiceSourceFile(
-				filename,
-				scriptSnapshot,
-				...rest
-			);
-
-			if (isGlsl(filename)) {
-				sourcefile.isDeclarationFile = true;
-			}
-
-			return sourcefile;
+			return scriptSnapshot;
 		};
 
+		const updateSourceFile = (filename: string, sourceFile: ts.SourceFile) => {
+			if (isGlsl(filename)) {
+				// GLSL files will always end up as declaration files
+				sourceFile.isDeclarationFile = true;
+			}
+			return sourceFile;
+		};
+
+		// Create source file entries
+		const tsCreateLanguageServiceSourceFile =
+			ts.createLanguageServiceSourceFile;
+		ts.createLanguageServiceSourceFile = (filename, scriptSnapshot, ...rest) =>
+			updateSourceFile(
+				filename,
+				tsCreateLanguageServiceSourceFile(
+					filename,
+					getSnapshot(filename, scriptSnapshot),
+					...rest
+				)
+			);
+
+		// Update source file entries when file content changes
 		const tsUpdateLanguageServiceSourceFile =
 			ts.updateLanguageServiceSourceFile;
 		ts.updateLanguageServiceSourceFile = (
 			sourceFile,
 			scriptSnapshot,
 			...rest
-		) => {
-			info.project.projectService.logger.info(
-				`>>> Updating sourceFile for ${sourceFile.fileName}`
+		) =>
+			updateSourceFile(
+				sourceFile.fileName,
+				tsUpdateLanguageServiceSourceFile(sourceFile, scriptSnapshot, ...rest)
 			);
-
-			if (isGlsl(sourceFile.fileName)) {
-				scriptSnapshot = getDtsSnapshot(ts, scriptSnapshot);
-			}
-
-			sourceFile = tsUpdateLanguageServiceSourceFile(
-				sourceFile,
-				scriptSnapshot,
-				...rest
-			);
-
-			if (isGlsl(sourceFile.fileName)) {
-				sourceFile.isDeclarationFile = true;
-			}
-
-			return sourceFile;
-		};
 
 		if (info.languageServiceHost.resolveModuleNames) {
 			const tsResolveModuleNames =
@@ -86,19 +80,18 @@ function init(modules: {
 				);
 
 				return moduleNames.map((moduleName, index) => {
-					try {
-						if (isGlsl(moduleName)) {
-							return {
-								extension: tsModule.Extension.Dts,
-								isExternalLibraryImport: false,
-								resolvedFileName: path.resolve(
-									path.dirname(containingFile),
-									moduleName
-								),
-							};
-						} 
-					} catch (error) {
+					if (isGlsl(moduleName)) {
+						return {
+							extension: tsModule.Extension.Dts,
+							isExternalLibraryImport: false,
+							resolvedFileName: path.resolve(
+								path.dirname(containingFile),
+								moduleName
+							),
+						};
 					}
+
+					return resolvedModules[index];
 				});
 			};
 		}
