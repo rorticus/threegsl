@@ -45,11 +45,7 @@ void main() {
     }
 
     gl_FragColor =  vec4(v_color, 1.0) * vec4(ambient + diffuse, 1.0);
-}`,
-    uniforms: {
-        u_time: { name: 'u_time', type: 'float' },
-        u_numLights: { name: 'u_numLights', type: 'int' },
-    }
+}`
 } as FragmentShader<{
     u_time: 'float',
     u_numLights: 'int',

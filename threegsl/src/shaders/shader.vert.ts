@@ -15,6 +15,4 @@ void main() {
     v_normal = normalMatrix * normal;
     v_position = (modelMatrix * vec4(position, 1.0)).xyz;
 }`,
-    uniforms: {
-    }
 } as VertexShader<{}>;
