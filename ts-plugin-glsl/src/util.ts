@@ -11,5 +11,5 @@ export function getDtsSnapshot(
 ) {
 	const source = scriptSnapshot.getText(0, scriptSnapshot.getLength());
 	const dts = createDtsFromSource(source);
-	return ts.ScriptSnapshot.fromString(dts);
+	return ts.ScriptSnapshot.fromString(dts.source);
 }

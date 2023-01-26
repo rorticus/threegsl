@@ -1,5 +1,5 @@
-import * as glslParser from '@shaderfrog/glsl-parser';
-import * as glslAst from '@shaderfrog/glsl-parser/ast';
+import glslParser from '@shaderfrog/glsl-parser';
+import glslAst from '@shaderfrog/glsl-parser/ast/index.js';
 import type { DeclaratorListNode, Path } from '@shaderfrog/glsl-parser/ast';
 import { readFileSync } from 'fs';
 
@@ -15,6 +15,17 @@ type Attribute = {
 	type: string;
 	name: string;
 };
+
+export type GlslDtsFile = {
+	source: string;
+	uniforms: Uniform[];
+	attributes: Attribute[];
+};
+
+const defaultTypeMap = new Map();
+defaultTypeMap.set('vec3', 'number[]');
+defaultTypeMap.set('vec4', 'number[]');
+defaultTypeMap.set('float', 'number');
 
 function parseNode(node: DeclaratorListNode) {
 	const spec_type = node.specified_type;
@@ -42,17 +53,40 @@ function createVisitor(uniforms: Uniform[], attributes: Attribute[]) {
 	};
 }
 
-export function createDtsFromSource(source: string) {
+/**
+ * Create a .d.ts resource from a GLSL source string
+ *
+ * @param source a GLSL source string
+ * @param typeMap an optional mapping of GLSL types to some other type
+ */
+export function createDtsFromSource(
+	source: string,
+	typeMap?: Map<string, string>
+): GlslDtsFile {
 	const uniforms: Uniform[] = [];
 	const attributes: Attribute[] = [];
 	const visitor = createVisitor(uniforms, attributes);
 	const ast = parser.parse(source);
 	visit(ast, visitor);
 
-	const uniformsTypesStr = uniforms.map((u) => `${u.name}: string`).join(',');
-	const attrsTypesStr = attributes.map((a) => `${a.name}: string`).join(',');
+	const uniformsTypesStr = uniforms
+		.map(
+			(u) =>
+				`${u.name}: ${
+					typeMap?.get(u.type) ?? defaultTypeMap.get(u.type) ?? u.type
+				}`
+		)
+		.join(',');
+	const attrsTypesStr = attributes
+		.map(
+			(a) =>
+				`${a.name}: ${
+					typeMap?.get(a.type) ?? defaultTypeMap.get(a.type) ?? a.type
+				}`
+		)
+		.join(',');
 
-	return [
+	const dts = [
 		'declare const shader: {',
 		'  source: string;',
 		`  uniforms: {${uniformsTypesStr}};`,
@@ -60,9 +94,24 @@ export function createDtsFromSource(source: string) {
 		'};',
 		'export default shader;',
 	].join('\n');
+
+	return {
+		uniforms,
+		attributes,
+		source: dts,
+	};
 }
 
-export function createDtsFromFile(filename: string) {
+/**
+ * Create a .d.ts resource from a GLSL file
+ *
+ * @param filename a path to a GLSL file
+ * @param typeMap an optional mapping of GLSL types to some other type
+ */
+export function createDtsFromFile(
+	filename: string,
+	typeMap?: Map<string, string>
+): GlslDtsFile {
 	const source = readFileSync(filename, { encoding: 'utf8' });
-	return createDtsFromSource(source);
+	return createDtsFromSource(source, typeMap);
 }

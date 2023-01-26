@@ -1,4 +1,9 @@
 {
-  "private": true,
-  "workspaces": ["threegsl", "ts-plugin-glsl", "glsl-ts-util"]
+	"private": true,
+	"workspaces": [
+		"threegsl",
+		"ts-plugin-glsl",
+		"glsl-ts-util",
+		"vite-plugin-glsl"
+	]
 }

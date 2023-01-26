@@ -1,5 +1,5 @@
 {
-  "name": "glsl-ts-util",
+  "name": "vite-plugin-glsl",
   "version": "1.0.0",
   "description": "",
   "main": "dist/index.js",
@@ -10,11 +10,9 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "dependencies": {
-    "@shaderfrog/glsl-parser": "^1.1.0"
-  },
   "devDependencies": {
+    "@rollup/pluginutils": "^5.0.2",
     "@types/node": "^18.11.18",
-    "typescript": "^4.9.4"
+    "glsl-ts-util": "1.0.0"
   }
 }

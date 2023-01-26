@@ -1,8 +1,9 @@
 {
 	"compilerOptions": {
 		"declaration": true,
-		"target": "ES2017",
-		"module": "commonjs",
+		"target": "es2020",
+		"module": "es2020",
+		"moduleResolution": "node",
 		"esModuleInterop": true,
 		"forceConsistentCasingInFileNames": true,
 		"strict": true,
