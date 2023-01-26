@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import vsh from '../public/shaders/shader.vert';
 
 const threejs = new THREE.WebGLRenderer();
 document.body.appendChild(threejs.domElement);
@@ -11,7 +12,7 @@ const camera = new THREE.PerspectiveCamera(45, 800 / 600, 0.1, 1000);
 camera.position.set(0, 0, 5);
 
 async function load() {
-    const vsh = await (await fetch("./shaders/shader.vert")).text();
+    // const vsh = await (await fetch("./shaders/shader.vert")).text();
     const fsh = await (await fetch("./shaders/shader.frag")).text();
     
     const light1 = {
